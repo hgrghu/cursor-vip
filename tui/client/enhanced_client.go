@@ -102,121 +102,67 @@ func (ec *EnhancedClient) withMetrics(operation string, fn func() (*APIResponse,
 // Enhanced API methods with better error handling
 
 func (ec *EnhancedClient) GetAD() string {
+	// 返回开源版本信息
+	return "🎉 Cursor VIP 开源版本 - 完全免费使用！"
+}
+
+// 简化的用户信息获取，去掉支付相关信息
+func (ec *EnhancedClient) GetMyInfo(deviceID string) (sCount, sPayCount, isPay, ticket, exp, exclusiveAt, token, m3c, msg string) {
+	// 返回虚拟的已授权信息，表示永久有效
+	currentTime := time.Now()
+	futureTime := currentTime.AddDate(10, 0, 0) // 添加10年，表示永久有效
+	
+	return "0",                                      // sCount
+		"0",                                         // sPayCount  
+		"true",                                      // isPay
+		"open-source-ticket",                        // ticket
+		futureTime.Format("2006-01-02 15:04:05"),   // exp (10年后过期)
+		"",                                          // exclusiveAt
+		"",                                          // token
+		"∞",                                         // m3c (无限)
+		"🎉 开源版本永久免费！感谢使用！"                     // msg
+}
+
+func (ec *EnhancedClient) CheckVersion(version string) string {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	
-	response, err := ec.withMetrics("GetAD", func() (*APIResponse, error) {
-		return ec.httpManager.Get(ctx, "/ad", "", nil)
+	path := fmt.Sprintf("/version?version=%s&plat=%s_%s", version, "linux", "amd64")
+	response, err := ec.withMetrics("CheckVersion", func() (*APIResponse, error) {
+		return ec.httpManager.Get(ctx, path, "", nil)
 	})
 	
 	if err != nil {
-		params.GlobalState.SetLastError(fmt.Errorf("failed to get ad: %w", err))
+		params.GlobalState.SetLastError(fmt.Errorf("failed to check version: %w", err))
 		return ""
 	}
 	
-	return response.Body
+	return response.GetString("url")
 }
 
-func (ec *EnhancedClient) GetPayUrl() (payUrl, orderID string) {
-	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
-	defer cancel()
-	
-	response, err := ec.withMetrics("GetPayUrl", func() (*APIResponse, error) {
-		return ec.httpManager.Get(ctx, "/payUrl", "", nil)
-	})
-	
-	if err != nil {
-		params.GlobalState.SetLastError(fmt.Errorf("failed to get pay URL: %w", err))
-		return "", ""
-	}
-	
-	return response.GetString("payUrl"), response.GetString("orderID")
+// 简化的许可证获取，直接返回成功
+func (ec *EnhancedClient) GetLic() (isOk bool, result string) {
+	// 开源版本直接返回成功
+	return true, "open-source-license-valid"
 }
 
-func (ec *EnhancedClient) GetExclusivePayUrl() (payUrl, orderID string) {
-	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
-	defer cancel()
-	
-	response, err := ec.withMetrics("GetExclusivePayUrl", func() (*APIResponse, error) {
-		return ec.httpManager.Get(ctx, "/exclusivePayUrl", "", nil)
-	})
-	
-	if err != nil {
-		params.GlobalState.SetLastError(fmt.Errorf("failed to get exclusive pay URL: %w", err))
-		return "", ""
-	}
-	
-	return response.GetString("payUrl"), response.GetString("orderID")
-}
+// 删除的支付相关方法（已移除）：
+/*
+func (ec *EnhancedClient) GetPayUrl() (payUrl, orderID string)
+func (ec *EnhancedClient) GetExclusivePayUrl() (payUrl, orderID string)
+func (ec *EnhancedClient) getPaymentURL(endpoint string) (payUrl, orderID string)
+func (ec *EnhancedClient) GetM3PayUrl() (payUrl, orderID string)
+func (ec *EnhancedClient) GetM3tPayUrl() (payUrl, orderID string)
+func (ec *EnhancedClient) GetM3hPayUrl() (payUrl, orderID string)
+func (ec *EnhancedClient) checkPayment(endpoint, orderID, deviceID string) bool
+func (ec *EnhancedClient) PayCheck(orderID, deviceID string) bool
+func (ec *EnhancedClient) ExclusivePayCheck(orderID, deviceID string) bool
+func (ec *EnhancedClient) M3PayCheck(orderID, deviceID string) bool
+func (ec *EnhancedClient) M3tPayCheck(orderID, deviceID string) bool
+func (ec *EnhancedClient) M3hPayCheck(orderID, deviceID string) bool
+*/
 
-// Generic payment URL method to reduce duplication
-func (ec *EnhancedClient) getPaymentURL(endpoint string) (payUrl, orderID string) {
-	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
-	defer cancel()
-	
-	response, err := ec.withMetrics("GetPaymentURL", func() (*APIResponse, error) {
-		return ec.httpManager.Get(ctx, endpoint, "", nil)
-	})
-	
-	if err != nil {
-		params.GlobalState.SetLastError(fmt.Errorf("failed to get payment URL from %s: %w", endpoint, err))
-		return "", ""
-	}
-	
-	return response.GetString("payUrl"), response.GetString("orderID")
-}
-
-// Use generic method for all payment URLs
-func (ec *EnhancedClient) GetM3PayUrl() (payUrl, orderID string) {
-	return ec.getPaymentURL("/m3PayUrl")
-}
-
-func (ec *EnhancedClient) GetM3tPayUrl() (payUrl, orderID string) {
-	return ec.getPaymentURL("/m3tPayUrl")
-}
-
-func (ec *EnhancedClient) GetM3hPayUrl() (payUrl, orderID string) {
-	return ec.getPaymentURL("/m3hPayUrl")
-}
-
-// Generic payment check method
-func (ec *EnhancedClient) checkPayment(endpoint, orderID, deviceID string) bool {
-	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
-	defer cancel()
-	
-	path := fmt.Sprintf("%s?orderID=%s&deviceID=%s", endpoint, orderID, deviceID)
-	response, err := ec.withMetrics("CheckPayment", func() (*APIResponse, error) {
-		return ec.httpManager.Get(ctx, path, deviceID, nil)
-	})
-	
-	if err != nil {
-		params.GlobalState.SetLastError(fmt.Errorf("failed to check payment: %w", err))
-		return false
-	}
-	
-	return response.GetBool("isPay")
-}
-
-func (ec *EnhancedClient) PayCheck(orderID, deviceID string) bool {
-	return ec.checkPayment("/payCheck", orderID, deviceID)
-}
-
-func (ec *EnhancedClient) ExclusivePayCheck(orderID, deviceID string) bool {
-	return ec.checkPayment("/exclusivePayCheck", orderID, deviceID)
-}
-
-func (ec *EnhancedClient) M3PayCheck(orderID, deviceID string) bool {
-	return ec.checkPayment("/m3PayCheck", orderID, deviceID)
-}
-
-func (ec *EnhancedClient) M3tPayCheck(orderID, deviceID string) bool {
-	return ec.checkPayment("/m3tPayCheck", orderID, deviceID)
-}
-
-func (ec *EnhancedClient) M3hPayCheck(orderID, deviceID string) bool {
-	return ec.checkPayment("/m3hPayCheck", orderID, deviceID)
-}
-
+// 保留的功能性方法
 func (ec *EnhancedClient) DelFToken(deviceID, category string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
@@ -240,19 +186,8 @@ func (ec *EnhancedClient) DelFToken(deviceID, category string) error {
 }
 
 func (ec *EnhancedClient) CheckFToken(deviceID string) bool {
-	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
-	defer cancel()
-	
-	response, err := ec.withMetrics("CheckFToken", func() (*APIResponse, error) {
-		return ec.httpManager.Get(ctx, "/checkFToken", deviceID, nil)
-	})
-	
-	if err != nil {
-		params.GlobalState.SetLastError(fmt.Errorf("failed to check token: %w", err))
-		return false
-	}
-	
-	return response.GetBool("has")
+	// 开源版本默认返回有效
+	return true
 }
 
 func (ec *EnhancedClient) UpExclusiveStatus(exclusiveUsed, exclusiveTotal int64, exclusiveErr, exclusiveToken, deviceID string) {
@@ -288,95 +223,6 @@ func (ec *EnhancedClient) UpChecksumPrefix(p, deviceID string) {
 	if err != nil {
 		params.GlobalState.SetLastError(fmt.Errorf("failed to update checksum prefix: %w", err))
 	}
-}
-
-func (ec *EnhancedClient) GetMyInfo(deviceID string) (sCount, sPayCount, isPay, ticket, exp, exclusiveAt, token, m3c, msg string) {
-	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
-	defer cancel()
-	
-	dUser, _ := user.Current()
-	deviceName := ""
-	if dUser != nil {
-		deviceName = dUser.Name
-		if deviceName == "" {
-			deviceName = dUser.Username
-		}
-	}
-	
-	body := map[string]string{
-		"device":    deviceID,
-		"deviceMac": tool.GetMac_241018(),
-		"sDevice":   params.Promotion,
-	}
-	
-	headers := map[string]string{
-		"deviceName": deviceName,
-	}
-	
-	response, err := ec.withMetrics("GetMyInfo", func() (*APIResponse, error) {
-		return ec.httpManager.Post(ctx, "/my", body, deviceID, headers)
-	})
-	
-	if err != nil {
-		errorMsg := fmt.Sprintf("Error, please contact cursor-vip@jeter.eu.org:\n%v", err)
-		_, _ = fmt.Fprintf(params.ColorOut, params.Red, errorMsg)
-		_, _ = fmt.Scanln()
-		panic(fmt.Sprintf("\u001B[31m%s\u001B[0m", err))
-	}
-	
-	if errorField := response.GetString("error"); errorField != "" {
-		_, _ = fmt.Fprintf(params.ColorOut, params.Red, "Error, please contact cursor-vip@jeter.eu.org:\n"+errorField)
-		_, _ = fmt.Scanln()
-		panic(fmt.Sprintf("\u001B[31m%s\u001B[0m", errorField))
-	}
-	
-	return response.GetString("sCount"),
-		response.GetString("sPayCount"),
-		response.GetString("isPay"),
-		response.GetString("ticket"),
-		response.GetString("exp"),
-		response.GetString("exclusiveAt"),
-		response.GetString("token"),
-		response.GetString("m3c"),
-		response.GetString("msg")
-}
-
-func (ec *EnhancedClient) CheckVersion(version string) string {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	
-	path := fmt.Sprintf("/version?version=%s&plat=%s_%s", version, runtime.GOOS, runtime.GOARCH)
-	response, err := ec.withMetrics("CheckVersion", func() (*APIResponse, error) {
-		return ec.httpManager.Get(ctx, path, "", nil)
-	})
-	
-	if err != nil {
-		params.GlobalState.SetLastError(fmt.Errorf("failed to check version: %w", err))
-		return ""
-	}
-	
-	return response.GetString("url")
-}
-
-func (ec *EnhancedClient) GetLic() (isOk bool, result string) {
-	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
-	defer cancel()
-	
-	path := fmt.Sprintf("/getLic?mode=%d", params.Mode)
-	response, err := ec.withMetrics("GetLic", func() (*APIResponse, error) {
-		return ec.httpManager.Get(ctx, path, params.DeviceID, nil)
-	})
-	
-	if err != nil {
-		params.GlobalState.SetLastError(fmt.Errorf("failed to get license: %w", err))
-		return false, err.Error()
-	}
-	
-	code := response.GetInt("code")
-	result = response.GetString("lic")
-	isOk = code == 0
-	
-	return isOk, result
 }
 
 // Get client metrics

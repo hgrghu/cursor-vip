@@ -182,12 +182,10 @@ func (m *Monitor) RecordAuth(success bool) {
 	logger.LogAuth("attempt", "monitor", success)
 }
 
-// Payment tracking
+// Payment tracking (开源版本已移除支付功能)
 func (m *Monitor) RecordPayment(success bool) {
-	atomic.AddInt64(&m.metrics.PaymentAttempts, 1)
-	if success {
-		atomic.AddInt64(&m.metrics.PaymentSuccess, 1)
-	}
+	// 开源版本不再记录支付相关指标
+	return
 }
 
 // Error tracking

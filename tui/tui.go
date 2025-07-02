@@ -3,12 +3,10 @@ package tui
 import (
 	"embed"
 	"fmt"
-	"github.com/atotto/clipboard"
 	"github.com/kingparks/cursor-vip/tui/client"
 	"github.com/kingparks/cursor-vip/tui/params"
 	"github.com/kingparks/cursor-vip/tui/tool"
 	"github.com/mattn/go-colorable"
-	"math"
 	"os/signal"
 	"syscall"
 
@@ -64,6 +62,7 @@ func Run() (productSelected string, modelIndexSelected int) {
 	}
 
 	_, _ = fmt.Fprintf(params.ColorOut, params.Green, params.Trr.Tr("CURSOR VIP")+` v`+strings.Join(strings.Split(fmt.Sprint(params.Version), ""), "."))
+	
 	// 检查是否在容器环境
 	if content, err := os.ReadFile("/proc/1/cgroup"); err == nil {
 		if strings.Contains(string(content), "/docker/") {
@@ -74,27 +73,17 @@ func Run() (productSelected string, modelIndexSelected int) {
 			panic(params.Trr.Tr("不支持容器环境"))
 		}
 	}
+	
 	client.Cli.SetProxy(params.Lang)
 	_, _ = fmt.Fprintf(params.ColorOut, params.Green, params.Trr.Tr("设备码")+":"+params.DeviceID)
-	sCount, sPayCount, _, _, exp, exclusiveAt, token, m3c, msg := client.Cli.GetMyInfo(params.DeviceID)
-	expTime, _ := time.ParseInLocation("2006-01-02 15:04:05", exp, time.Local)
 	_, _ = fmt.Fprintf(params.ColorOut, params.Green, params.Trr.Tr("当前模式")+": "+fmt.Sprint(params.Mode))
-	if params.Mode == 3 {
-		params.M3c = m3c
-		_, _ = fmt.Fprintf(params.ColorOut, params.Green, params.Trr.Tr("免付刷新次数")+": "+m3c)
-	}
-	_, _ = fmt.Fprintf(params.ColorOut, params.Green, params.Trr.Tr("付费到期时间")+":"+exp)
-	_, _ = fmt.Fprintf(params.ColorOut, "\033[32m%s\033[0m\u001B[1;32m %s \u001B[0m\033[32m%s\033[0m\u001B[1;32m %s \u001B[0m\u001B[32m%s\u001B[0m\n",
-		params.Trr.Tr("推广命令：(已推广"), sCount, params.Trr.Tr("人,推广已付费"), sPayCount, params.Trr.Tr("人；每推广年付费2人可自动获得一年授权)"))
-	_, _ = fmt.Fprintf(params.ColorOut, params.HGreen, "bash <(curl -Lk "+params.GithubPath+params.GithubDownLoadPath+params.GithubInstall+") "+params.DeviceID+"\n")
-	_, _ = fmt.Fprintf(params.ColorOut, params.Green, params.Trr.Tr("专属推广链接")+"："+params.Host+"?p="+params.DeviceID)
+	
+	// 显示开源版本信息
+	_, _ = fmt.Fprintf(params.ColorOut, params.HGreen, "🎉 "+params.Trr.Tr("开源免费版本，无需付费！"))
+	_, _ = fmt.Fprintf(params.ColorOut, params.Green, "📧 "+params.Trr.Tr("项目地址")+"：https://github.com/kingparks/cursor-vip")
+	_, _ = fmt.Fprintf(params.ColorOut, params.Green, "⭐ "+params.Trr.Tr("如果觉得有用，请给项目点个星！"))
 	fmt.Println()
 
-	// 专属用户的消息
-	if msg != "" {
-		_, _ = fmt.Fprintf(params.ColorOut, params.Yellow, msg)
-		fmt.Println()
-	}
 	printAD()
 	fmt.Println()
 	checkUpdate(params.Version)
@@ -102,44 +91,10 @@ func Run() (productSelected string, modelIndexSelected int) {
 	// 快捷键
 	_, _ = fmt.Fprintf(params.ColorOut, params.Green, params.Trr.Tr("Switch to English：Press 'sen' on keyboard in turn"))
 	modelIndexSelected = int(params.Mode)
-	//if !params.IsOnlyMod2 {
-	//	_, _ = fmt.Fprintf(params.ColorOut, params.Green, params.Trr.Tr("切换模式依次按键盘")+": sm1/sm2/sm3/sm4")
-	//}
-	// 试用账号
-	if params.Mode == 3 {
-		//_, _ = fmt.Fprintf(params.ColorOut, params.Green, params.Trr.Tr("查询账号自动刷新剩余天数：依次按键盘 q3d"))
-		if params.Lang == "zh" {
-			_, _ = fmt.Fprintf(params.ColorOut, params.Green, params.Trr.Tr("小额付费刷新账号：依次按键盘 u3d"))
-		}
-		_, _ = fmt.Fprintf(params.ColorOut, params.Green, "10x"+params.Trr.Tr("小额付费刷新账号：依次按键盘 u3t"))
-		_, _ = fmt.Fprintf(params.ColorOut, params.Green, "100x"+params.Trr.Tr("小额付费刷新账号：依次按键盘 u3h"))
-		_, _ = fmt.Fprintf(params.ColorOut, params.Green, params.Trr.Tr("订阅时长会在验证通过后增加对应的天数"))
-	}
-	// 独享账号
-	if params.Mode == 4 {
-		exclusiveAtTime, err := time.ParseInLocation("2006-01-02 15:04:05", exclusiveAt, time.Local)
-		if err != nil {
-			_, _ = fmt.Fprintf(params.ColorOut, params.Green, params.Trr.Tr("购买独享账号：依次按键盘 buy"))
-			fmt.Println()
-		} else {
-			subDuration := time.Now().Sub(exclusiveAtTime)
-			// 30天内
-			if subDuration.Hours() < 30*24 {
-				if token != "" {
-					params.ExclusiveToken = token
-					_, _ = fmt.Fprintf(params.ColorOut, params.Green, params.Trr.Tr("独享账号已使用天数")+fmt.Sprint(": ", math.Ceil(subDuration.Hours()/24))+"d")
-					fmt.Println()
-				} else {
-					_, _ = fmt.Fprintf(params.ColorOut, params.Green, params.Trr.Tr("已购买独享账号,预计n小时内人工分配完成")+" n="+fmt.Sprint(int(24-subDuration.Hours())))
-				}
-			} else {
-				_, _ = fmt.Fprintf(params.ColorOut, params.Green, params.Trr.Tr("购买独享账号：依次按键盘 buy"))
-				fmt.Println()
-			}
-		}
-	}
+
 	fmt.Println()
 
+	// 产品选择
 	if len(params.Product) > 1 {
 		_, _ = fmt.Fprintf(params.ColorOut, params.DefaultColor, params.Trr.Tr("选择要授权的产品："))
 		for i, v := range params.Product {
@@ -165,85 +120,43 @@ func Run() (productSelected string, modelIndexSelected int) {
 	} else {
 		productSelected = params.Product[0]
 	}
-	// 到期了
-	periodIndex := 1
-	if expTime.Before(time.Now()) {
-		_, _ = fmt.Fprintf(params.ColorOut, params.DefaultColor, params.Trr.Tr("选择有效期："))
-		//jbPeriod := []string{"1" + params.Trr.Tr("年(购买)"), "2" + params.Trr.Tr("小时(免费)")}
-		jbPeriod := []string{"1" + params.Trr.Tr("年(购买)")}
-		for i, v := range jbPeriod {
-			_, _ = fmt.Fprintf(params.ColorOut, params.HGreen, fmt.Sprintf("%d. %s\t", i+1, v))
-		}
-		fmt.Println()
-		_, _ = fmt.Fprintf(params.ColorOut, "%s", params.Trr.Tr("请输入有效期编号（直接回车默认为1）："))
-		_, _ = fmt.Scanln(&periodIndex)
-		if periodIndex < 1 || periodIndex > len(jbPeriod) {
-			fmt.Println(params.Trr.Tr("输入有误"))
-			return
-		}
-		fmt.Println(params.Trr.Tr("选择的有效期为：") + jbPeriod[periodIndex-1])
-		fmt.Println()
 
-		//if periodIndex == 2 {
-		//	_, _ = fmt.Fprintf(params.ColorOut, green, Trr.Tr("授权成功！使用过程请不要关闭此窗口"))
-		//	countDown(2 * 60 * 60)
-		//	return
-		//}
+	// 直接授权成功，无需付费验证
+	_, _ = fmt.Fprintf(params.ColorOut, params.Green, "✅ "+params.Trr.Tr("授权成功！开源版本永久免费使用"))
+	_, _ = fmt.Fprintf(params.ColorOut, params.Green, "🚀 "+params.Trr.Tr("正在启动服务，请保持此窗口开启..."))
+	fmt.Println()
 
-		payUrl, orderID := client.Cli.GetPayUrl()
-		isCopyText := ""
-		errClip := clipboard.WriteAll(payUrl)
-		if errClip == nil {
-			isCopyText = params.Trr.Tr("（已复制到剪贴板）")
-		}
-		fmt.Println(params.Trr.Tr("付费已到期,捐赠以获取一年期授权") + isCopyText)
-		_, _ = fmt.Fprintf(params.ColorOut, params.DGreen, payUrl)
-		fmt.Println(params.Trr.Tr("捐赠完成后请回车"))
-		//检测控制台回车
-	checkPay:
-		_, _ = fmt.Scanln()
-		isPay := client.Cli.PayCheck(orderID, params.DeviceID)
-		if !isPay {
-			fmt.Println(params.Trr.Tr("未捐赠,请捐赠完成后回车"))
-			goto checkPay
-		}
-		_, _, _, _, exp, _, _, _, _ = client.Cli.GetMyInfo(params.DeviceID)
-		expTime, _ = time.ParseInLocation("2006-01-02 15:04:05", exp, time.Local)
-		fmt.Println()
-	}
-	go func(t int) {
+	// 启动倒计时（设置为一年，实际上是永久）
+	go func() {
 		params.SigCountDown = make(chan int, 1)
 		<-params.SigCountDown
-		_, _ = fmt.Fprintf(params.ColorOut, params.Green, params.Trr.Tr("授权成功！使用过程请不要关闭此窗口"))
-		tool.CountDown(t)
-	}(int(expTime.Sub(time.Now()).Seconds()))
+		_, _ = fmt.Fprintf(params.ColorOut, params.Green, params.Trr.Tr("服务运行中，使用过程请不要关闭此窗口"))
+		// 设置一个很长的时间，表示永久授权
+		tool.CountDown(365 * 24 * 3600) // 一年时间
+	}()
+	
 	return
 }
 
 func printAD() {
-	ad := client.Cli.GetAD()
-	if len(ad) == 0 {
-		return
-	}
-	_, _ = fmt.Fprintf(params.ColorOut, params.Yellow, ad)
+	// 简化广告显示，只显示开源项目信息
+	_, _ = fmt.Fprintf(params.ColorOut, params.Yellow, "📢 "+params.Trr.Tr("感谢使用 Cursor VIP 开源版本！"))
 }
 
 func checkUpdate(version int) {
+	// 保留版本检查功能
 	upUrl := client.Cli.CheckVersion(fmt.Sprint(version))
 	if upUrl == "" {
 		return
 	}
-	isCopyText := ""
+	
 	installCmd := `bash -c "$(curl -fsSLk ` + params.GithubPath + params.GithubDownLoadPath + params.GithubInstall + `)"`
-	errClip := clipboard.WriteAll(installCmd)
-	if errClip == nil {
-		isCopyText = params.Trr.Tr("（已复制到剪贴板）")
-	}
+	
 	switch runtime.GOOS {
 	case "windows":
-		_, _ = fmt.Fprintf(params.ColorOut, params.Red, params.Trr.Tr("有新版本，请关闭本窗口，将下面命令粘贴到GitBash窗口执行")+isCopyText+`：`)
+		_, _ = fmt.Fprintf(params.ColorOut, params.Red, params.Trr.Tr("有新版本，请关闭本窗口，将下面命令粘贴到GitBash窗口执行")+`：`)
 	default:
-		_, _ = fmt.Fprintf(params.ColorOut, params.Red, params.Trr.Tr("有新版本，请关闭本窗口，将下面命令粘贴到新终端窗口执行")+isCopyText+`：`)
+		_, _ = fmt.Fprintf(params.ColorOut, params.Red, params.Trr.Tr("有新版本，请关闭本窗口，将下面命令粘贴到新终端窗口执行")+`：`)
 	}
 	_, _ = fmt.Fprintf(params.ColorOut, params.HGreen, installCmd)
 	fmt.Println()

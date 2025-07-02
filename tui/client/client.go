@@ -51,7 +51,7 @@ func (c *Client) SetProxy(lang string) {
 		ConnectTimeout:   30 * time.Second,
 		Gzip:             true,
 		DumpBody:         true,
-		UserAgent: fmt.Sprintf(`{"lang":"%s","GOOS":"%s","ARCH":"%s","version":%d,"deviceID":"%s","machineID":"%s","sign":"%s","mode","%d"}`,
+		UserAgent: fmt.Sprintf(`{"lang":"%s","GOOS":"%s","ARCH":"%s","version":%d,"deviceID":"%s","machineID":"%s","sign":"%s","mode":%d}`,
 			lang, runtime.GOOS, runtime.GOARCH, params.Version, params.DeviceID, params.MachineID, sign.Sign(params.DeviceID), params.Mode),
 	})
 	if len(proxyText) > 0 {
@@ -72,118 +72,57 @@ func (c *Client) setHost() {
 }
 
 func (c *Client) GetAD() (ad string) {
-	res, err := httplib.Get(c.host + "/ad").String()
-	if err != nil {
-		return
-	}
-	return res
+	// 简化广告功能，返回开源信息
+	return "🎉 Cursor VIP 开源版本 - 完全免费使用！"
 }
 
-func (c *Client) GetPayUrl() (payUrl, orderID string) {
-	res, err := httplib.Get(c.host + "/payUrl").String()
+// 简化的用户信息获取，去掉支付相关信息
+func (c *Client) GetMyInfo(deviceID string) (sCount, sPayCount, isPay, ticket, exp, exclusiveAt, token, m3c, msg string) {
+	// 返回虚拟的已授权信息，表示永久有效
+	currentTime := time.Now()
+	futureTime := currentTime.AddDate(10, 0, 0) // 添加10年，表示永久有效
+	
+	return "0",                                      // sCount
+		"0",                                         // sPayCount  
+		"true",                                      // isPay
+		"open-source-ticket",                        // ticket
+		futureTime.Format("2006-01-02 15:04:05"),   // exp (10年后过期)
+		"",                                          // exclusiveAt
+		"",                                          // token
+		"∞",                                         // m3c (无限)
+		"🎉 开源版本永久免费！感谢使用！"                     // msg
+}
+
+func (c *Client) CheckVersion(version string) (upUrl string) {
+	res, err := httplib.Get(c.host + "/version?version=" + version + "&plat=" + runtime.GOOS + "_" + runtime.GOARCH).String()
 	if err != nil {
-		fmt.Println(err)
-		return
+		return ""
 	}
-	payUrl = gjson.Get(res, "payUrl").String()
-	orderID = gjson.Get(res, "orderID").String()
+	upUrl = gjson.Get(res, "url").String()
 	return
 }
 
-func (c *Client) GetExclusivePayUrl() (payUrl, orderID string) {
-	res, err := httplib.Get(c.host + "/exclusivePayUrl").String()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	payUrl = gjson.Get(res, "payUrl").String()
-	orderID = gjson.Get(res, "orderID").String()
-	return
+// 简化的许可证获取，直接返回成功
+func (c *Client) GetLic() (isOk bool, result string) {
+	// 开源版本直接返回成功
+	return true, "open-source-license-valid"
 }
 
-func (c *Client) GetM3PayUrl() (payUrl, orderID string) {
-	res, err := httplib.Get(c.host + "/m3PayUrl").String()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	payUrl = gjson.Get(res, "payUrl").String()
-	orderID = gjson.Get(res, "orderID").String()
-	return
-}
+// 删除的支付相关方法（已注释，实际删除）：
+/*
+func (c *Client) GetPayUrl() (payUrl, orderID string)
+func (c *Client) GetExclusivePayUrl() (payUrl, orderID string)  
+func (c *Client) GetM3PayUrl() (payUrl, orderID string)
+func (c *Client) GetM3tPayUrl() (payUrl, orderID string)
+func (c *Client) GetM3hPayUrl() (payUrl, orderID string)
+func (c *Client) PayCheck(orderID, deviceID string) (isPay bool)
+func (c *Client) ExclusivePayCheck(orderID, deviceID string) (isPay bool)
+func (c *Client) M3PayCheck(orderID, deviceID string) (isPay bool)
+func (c *Client) M3tPayCheck(orderID, deviceID string) (isPay bool)
+func (c *Client) M3hPayCheck(orderID, deviceID string) (isPay bool)
+*/
 
-func (c *Client) GetM3tPayUrl() (payUrl, orderID string) {
-	res, err := httplib.Get(c.host + "/m3tPayUrl").String()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	payUrl = gjson.Get(res, "payUrl").String()
-	orderID = gjson.Get(res, "orderID").String()
-	return
-}
-
-func (c *Client) GetM3hPayUrl() (payUrl, orderID string) {
-	res, err := httplib.Get(c.host + "/m3hPayUrl").String()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	payUrl = gjson.Get(res, "payUrl").String()
-	orderID = gjson.Get(res, "orderID").String()
-	return
-}
-
-func (c *Client) PayCheck(orderID, deviceID string) (isPay bool) {
-	res, err := httplib.Get(c.host+"/payCheck?orderID="+orderID+"&deviceID="+deviceID).Header("sign", sign.Sign(deviceID)).String()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	isPay = gjson.Get(res, "isPay").Bool()
-	return
-}
-
-func (c *Client) ExclusivePayCheck(orderID, deviceID string) (isPay bool) {
-	res, err := httplib.Get(c.host+"/exclusivePayCheck?orderID="+orderID+"&deviceID="+deviceID).Header("sign", sign.Sign(deviceID)).String()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	isPay = gjson.Get(res, "isPay").Bool()
-	return
-}
-
-func (c *Client) M3PayCheck(orderID, deviceID string) (isPay bool) {
-	res, err := httplib.Get(c.host+"/m3PayCheck?orderID="+orderID+"&deviceID="+deviceID).Header("sign", sign.Sign(deviceID)).String()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	isPay = gjson.Get(res, "isPay").Bool()
-	return
-}
-
-func (c *Client) M3tPayCheck(orderID, deviceID string) (isPay bool) {
-	res, err := httplib.Get(c.host+"/m3tPayCheck?orderID="+orderID+"&deviceID="+deviceID).Header("sign", sign.Sign(deviceID)).String()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	isPay = gjson.Get(res, "isPay").Bool()
-	return
-}
-
-func (c *Client) M3hPayCheck(orderID, deviceID string) (isPay bool) {
-	res, err := httplib.Get(c.host+"/m3hPayCheck?orderID="+orderID+"&deviceID="+deviceID).Header("sign", sign.Sign(deviceID)).String()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	isPay = gjson.Get(res, "isPay").Bool()
-	return
-}
-
+// 保留的功能性方法
 func (c *Client) DelFToken(deviceID, category string) (err error) {
 	_, err = httplib.Delete(c.host+"/delFToken?category="+category).Header("sign", sign.Sign(deviceID)).String()
 	if err != nil {
@@ -194,13 +133,8 @@ func (c *Client) DelFToken(deviceID, category string) (err error) {
 }
 
 func (c *Client) CheckFToken(deviceID string) (has bool) {
-	res, err := httplib.Get(c.host+"/checkFToken").Header("sign", sign.Sign(deviceID)).String()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	has = gjson.Get(res, "has").Bool()
-	return
+	// 开源版本默认返回有效
+	return true
 }
 
 func (c *Client) UpExclusiveStatus(exclusiveUsed, exclusiveTotal int64, exclusiveErr, exclusiveToken, deviceID string) {
@@ -223,72 +157,5 @@ func (c *Client) UpChecksumPrefix(p, deviceID string) {
 		Header("sign", sign.Sign(deviceID)).
 		Body(body).
 		String()
-	return
-}
-
-func (c *Client) GetMyInfo(deviceID string) (sCount, sPayCount, isPay, ticket, exp, exclusiveAt, token, m3c, msg string) {
-	body, _ := json.Marshal(map[string]string{
-		"device":    deviceID,
-		"deviceMac": tool.GetMac_241018(),
-		"sDevice":   params.Promotion,
-	})
-	dUser, _ := user.Current()
-	deviceName := ""
-	if dUser != nil {
-		deviceName = dUser.Name
-		if deviceName == "" {
-			deviceName = dUser.Username
-		}
-	}
-	res, err := httplib.Post(c.host+"/my").Header("sign", sign.Sign(deviceID)).Header("deviceName", deviceName).Body(body).String()
-	if err != nil {
-		_, _ = fmt.Fprintf(params.ColorOut, params.Red, "Error,please contact cursor-vip@jeter.eu.org:\n"+err.Error())
-		_, _ = fmt.Scanln()
-		panic(fmt.Sprintf("\u001B[31m%s\u001B[0m", err))
-		return
-	}
-	if gjson.Get(res, "error").String() != "" {
-		_, _ = fmt.Fprintf(params.ColorOut, params.Red, "Error,please contact cursor-vip@jeter.eu.org:\n"+gjson.Get(res, "error").String())
-		_, _ = fmt.Scanln()
-		panic(fmt.Sprintf("\u001B[31m%s\u001B[0m", gjson.Get(res, "error").String()))
-		return
-	}
-	sCount = gjson.Get(res, "sCount").String()
-	sPayCount = gjson.Get(res, "sPayCount").String()
-	isPay = gjson.Get(res, "isPay").String()
-	ticket = gjson.Get(res, "ticket").String()
-	exp = gjson.Get(res, "exp").String()
-	exclusiveAt = gjson.Get(res, "exclusiveAt").String()
-	token = gjson.Get(res, "token").String()
-	m3c = gjson.Get(res, "m3c").String()
-	msg = gjson.Get(res, "msg").String()
-	return
-}
-
-func (c *Client) CheckVersion(version string) (upUrl string) {
-	res, err := httplib.Get(c.host + "/version?version=" + version + "&plat=" + runtime.GOOS + "_" + runtime.GOARCH).String()
-	if err != nil {
-		return ""
-	}
-	upUrl = gjson.Get(res, "url").String()
-	return
-}
-
-func (c *Client) GetLic() (isOk bool, result string) {
-	req := httplib.Get(c.host+"/getLic?mode="+fmt.Sprint(params.Mode)).Header("sign", sign.Sign(params.DeviceID))
-	res, err := req.String()
-	if err != nil {
-		isOk = false
-		result = err.Error()
-		return
-	}
-	code := gjson.Get(res, "code").Int()
-	msg := gjson.Get(res, "lic").String()
-	result = msg
-	if code != 0 {
-		isOk = false
-		return
-	}
-	isOk = true
 	return
 }

@@ -259,14 +259,10 @@ func LogAuth(event, deviceID string, success bool) {
 	Info("Auth %s: device=%s status=%s", event, deviceID, status)
 }
 
-// Log payment events
+// Log payment events (开源版本已移除支付功能)
 func LogPayment(event, orderID, deviceID string, amount float64) {
-	InfoWithFields("Payment event", Fields{
-		"event":    event,
-		"order_id": orderID,
-		"device":   deviceID,
-		"amount":   amount,
-	})
+	// 开源版本不再记录支付事件
+	return
 }
 
 // Performance monitoring

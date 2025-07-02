@@ -2,10 +2,8 @@ package shortcut
 
 import (
 	"fmt"
-	"github.com/atotto/clipboard"
 	"github.com/eiannone/keyboard"
 	"github.com/kingparks/cursor-vip/authtool"
-	"github.com/kingparks/cursor-vip/tui/client"
 	"github.com/kingparks/cursor-vip/tui/params"
 	"github.com/kingparks/cursor-vip/tui/tool"
 	"os"
@@ -13,12 +11,6 @@ import (
 	"strings"
 	"syscall"
 )
-
-var payUrl string
-var orderIDExclusive string
-var orderIDU3d string
-var orderIDU3t string
-var orderIDU3h string
 
 func Do() {
 	if err := keyboard.Open(); err != nil {
@@ -113,122 +105,31 @@ func Do() {
 			keyBuffer = nil
 			tool.OpenNewTerminal()
 
-		case strings.HasSuffix(combination, "buy"):
-			payUrl, orderIDExclusive = client.Cli.GetExclusivePayUrl()
-			_ = clipboard.WriteAll(payUrl)
+		case strings.HasSuffix(combination, "ver"):
+			// 显示版本信息
 			fmt.Println()
-			_, _ = fmt.Fprintf(params.ColorOut, params.DGreen, payUrl)
-			fmt.Println(params.Trr.Tr("捐赠完成后请依次按键 ckp"))
+			_, _ = fmt.Fprintf(params.ColorOut, params.Green, "🎉 Cursor VIP 开源版本 v%s", strings.Join(strings.Split(fmt.Sprint(params.Version), ""), "."))
+			_, _ = fmt.Fprintf(params.ColorOut, params.Green, "📧 项目地址：https://github.com/kingparks/cursor-vip")
+			_, _ = fmt.Fprintf(params.ColorOut, params.Green, "⭐ 如果觉得有用，请给项目点个星！")
 			keyBuffer = nil
 
-		case strings.HasSuffix(combination, "u3d"):
-			if !client.Cli.CheckFToken(params.DeviceID) {
-				_, _ = fmt.Fprintf(params.ColorOut, params.Yellow, params.Trr.Tr("抱歉，模式三暂无新账号，请稍后再试"))
-				return
-			}
-			if params.M3c > "0" {
-				if err = client.Cli.DelFToken(params.DeviceID, "u3"); err != nil {
-					return
-				}
-				_, _ = fmt.Fprintf(params.ColorOut, params.Red, params.Trr.Tr("购买成功，将在重启 cursor-vip 后生效"))
-				tool.OpenNewTerminal()
-				return
-			}
-			payUrl, orderIDU3d = client.Cli.GetM3PayUrl()
-			_ = clipboard.WriteAll(payUrl)
+		case strings.HasSuffix(combination, "hlp"):
+			// 显示帮助信息
 			fmt.Println()
-			_, _ = fmt.Fprintf(params.ColorOut, params.DGreen, payUrl)
-			fmt.Println(params.Trr.Tr("捐赠完成后请依次按键 c3p"))
-			keyBuffer = nil
-
-		case strings.HasSuffix(combination, "u3t"):
-			if !client.Cli.CheckFToken(params.DeviceID) {
-				_, _ = fmt.Fprintf(params.ColorOut, params.Yellow, params.Trr.Tr("抱歉，模式三暂无新账号，请稍后再试"))
-				return
-			}
-			if params.M3c > "0" {
-				if err = client.Cli.DelFToken(params.DeviceID, "u3"); err != nil {
-					return
-				}
-				_, _ = fmt.Fprintf(params.ColorOut, params.Red, params.Trr.Tr("购买成功，将在重启 cursor-vip 后生效"))
-				tool.OpenNewTerminal()
-				return
-			}
-			payUrl, orderIDU3t = client.Cli.GetM3tPayUrl()
-			_ = clipboard.WriteAll(payUrl)
-			fmt.Println()
-			_, _ = fmt.Fprintf(params.ColorOut, params.DGreen, payUrl)
-			fmt.Println(params.Trr.Tr("捐赠完成后请依次按键 c3t"))
-			keyBuffer = nil
-
-		case strings.HasSuffix(combination, "u3h"):
-			if !client.Cli.CheckFToken(params.DeviceID) {
-				_, _ = fmt.Fprintf(params.ColorOut, params.Yellow, params.Trr.Tr("抱歉，模式三暂无新账号，请稍后再试"))
-				return
-			}
-			if params.M3c > "0" {
-				if err = client.Cli.DelFToken(params.DeviceID, "u3"); err != nil {
-					return
-				}
-				_, _ = fmt.Fprintf(params.ColorOut, params.Red, params.Trr.Tr("购买成功，将在重启 cursor-vip 后生效"))
-				tool.OpenNewTerminal()
-				return
-			}
-			payUrl, orderIDU3h = client.Cli.GetM3hPayUrl()
-			_ = clipboard.WriteAll(payUrl)
-			fmt.Println()
-			_, _ = fmt.Fprintf(params.ColorOut, params.DGreen, payUrl)
-			fmt.Println(params.Trr.Tr("捐赠完成后请依次按键 c3h"))
-			keyBuffer = nil
-
-		case strings.HasSuffix(combination, "ckp"):
-			fmt.Println("checking...")
-			isPay := client.Cli.ExclusivePayCheck(orderIDExclusive, params.DeviceID)
-			if !isPay {
-				fmt.Println(params.Trr.Tr("未捐赠,请捐赠完成后回车"))
-				continue
-			}
-			_, _ = fmt.Fprintf(params.ColorOut, params.Red, params.Trr.Tr("购买成功，将在重启 cursor-vip 后生效"))
-			keyBuffer = nil
-			tool.OpenNewTerminal()
-
-		case strings.HasSuffix(combination, "c3p"):
-			fmt.Println("checking...")
-			isPay := client.Cli.M3PayCheck(orderIDU3d, params.DeviceID)
-			if !isPay {
-				fmt.Println(params.Trr.Tr("未捐赠,请捐赠完成后回车"))
-				continue
-			}
-			_, _ = fmt.Fprintf(params.ColorOut, params.Red, params.Trr.Tr("购买成功，将在重启 cursor-vip 后生效"))
-			keyBuffer = nil
-			tool.OpenNewTerminal()
-
-		case strings.HasSuffix(combination, "c3t"):
-			fmt.Println("checking...")
-			isPay := client.Cli.M3tPayCheck(orderIDU3t, params.DeviceID)
-			if !isPay {
-				fmt.Println(params.Trr.Tr("未捐赠,请捐赠完成后回车"))
-				continue
-			}
-			_, _ = fmt.Fprintf(params.ColorOut, params.Red, params.Trr.Tr("购买成功，将在重启 cursor-vip 后生效"))
-			keyBuffer = nil
-			tool.OpenNewTerminal()
-
-		case strings.HasSuffix(combination, "c3h"):
-			fmt.Println("checking...")
-			isPay := client.Cli.M3hPayCheck(orderIDU3h, params.DeviceID)
-			if !isPay {
-				fmt.Println(params.Trr.Tr("未捐赠,请捐赠完成后回车"))
-				continue
-			}
-			_, _ = fmt.Fprintf(params.ColorOut, params.Red, params.Trr.Tr("购买成功，将在重启 cursor-vip 后生效"))
-			keyBuffer = nil
-			tool.OpenNewTerminal()
-
-		case strings.HasSuffix(combination, "q3d"):
-			_, _ = fmt.Fprintf(params.ColorOut, params.Green, "\t"+params.M3DaysRemainingOnTrial+"d")
+			_, _ = fmt.Fprintf(params.ColorOut, params.Yellow, "🔧 快捷键帮助：")
+			_, _ = fmt.Fprintf(params.ColorOut, params.Green, "sen - 切换到英文")
+			_, _ = fmt.Fprintf(params.ColorOut, params.Green, "szh - 切换到中文")
+			_, _ = fmt.Fprintf(params.ColorOut, params.Green, "sm1 - 切换到模式1")
+			_, _ = fmt.Fprintf(params.ColorOut, params.Green, "sm2 - 切换到模式2")
+			_, _ = fmt.Fprintf(params.ColorOut, params.Green, "sm3 - 切换到模式3")
+			_, _ = fmt.Fprintf(params.ColorOut, params.Green, "sm4 - 切换到模式4")
+			_, _ = fmt.Fprintf(params.ColorOut, params.Green, "ver - 显示版本信息")
+			_, _ = fmt.Fprintf(params.ColorOut, params.Green, "hlp - 显示此帮助")
 			keyBuffer = nil
 		}
+		
+		// 移除的支付相关快捷键：
+		// buy, u3d, u3t, u3h, ckp, c3p, c3t, c3h, q3d
 	}
 }
 
