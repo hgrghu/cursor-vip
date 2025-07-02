@@ -58,7 +58,7 @@ func initializeApplication() error {
 	ui.InitUI()
 	
 	// Initialize enhanced HTTP client
-	config, err := tool.GetEnhancedConfig()
+	_, err := tool.GetEnhancedConfig()
 	if err != nil {
 		logger.Warn("Failed to load enhanced config, using defaults: %v", err)
 	}

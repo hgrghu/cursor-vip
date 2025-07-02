@@ -6,7 +6,6 @@ import (
 	"github.com/denisbrodbeck/machineid"
 	"github.com/gofrs/flock"
 	"github.com/kingparks/cursor-vip/tui/params"
-	"github.com/tidwall/gjson"
 	"howett.net/plist"
 	"net"
 	"os"
@@ -109,38 +108,7 @@ func GetLocale() (langRes, locRes string) {
 	return
 }
 
-// 获取配置
-func GetConfig() (lang, promotion string, mode int64) {
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		return
-	}
-	b, _ := os.ReadFile(homeDir + "/.cursor-viprc")
-	s := string(b)
-	lang = gjson.Get(s, "lang").String()
-	mode = gjson.Get(s, "mode").Int()
-	promotion = gjson.Get(s, "promotion").String()
-	if lang == "" {
-		lang, _ = GetLocale()
-	}
-	if mode == 0 {
-		mode = 2
-	}
-	if params.IsOnlyMod2 {
-		mode = 2
-	}
-	return
-}
 
-// 设置配置
-func SetConfig(lang string, mode int64) {
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		return
-	}
-	config := fmt.Sprintf(`{"lang":"%s","promotion":"%s","mode":%d}`, lang, params.Promotion, mode)
-	_ = os.WriteFile(homeDir+"/.cursor-viprc", []byte(config), 0644)
-}
 
 func GetMac_241018() string {
 	interfaces, err := net.Interfaces()

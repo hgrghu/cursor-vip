@@ -2,18 +2,17 @@ package ui
 
 import (
 	"fmt"
-	"os"
+	"io"
 	"strings"
 	"sync"
 	"time"
 	
-	"github.com/kingparks/cursor-vip/tui/params"
 	"github.com/mattn/go-colorable"
 )
 
 // UI components and utilities
 type UIManager struct {
-	output    *colorable.Colorable
+	output    io.Writer
 	width     int
 	height    int
 	isLoading bool

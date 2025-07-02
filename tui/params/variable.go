@@ -8,7 +8,6 @@ import (
 	"time"
 	"os/signal"
 	"syscall"
-	"github.com/mattn/go-colorable"
 )
 
 var Mode int64           // 1模式1 2模式2
@@ -62,20 +61,6 @@ func (e *AppError) Error() string {
 var (
 	GlobalConfig *Config
 	GlobalState  *AppState
-	
-	// Enhanced signal handling
-	SigCountDown chan int
-	Sigs         chan os.Signal
-	
-	// UI components
-	ColorOut *colorable.Colorable
-	Trr      *Tr
-	
-	// Application metadata
-	DeviceID    string
-	MachineID   string
-	M3c         string
-	ExclusiveToken string
 )
 
 type Tr struct {

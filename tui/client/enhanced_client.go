@@ -3,13 +3,9 @@ package client
 import (
 	"context"
 	"fmt"
-	"os"
-	"os/user"
-	"runtime"
 	"time"
 	
 	"github.com/kingparks/cursor-vip/tui/params"
-	"github.com/kingparks/cursor-vip/tui/tool"
 )
 
 // Enhanced client with improved error handling and HTTP management

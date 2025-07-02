@@ -144,7 +144,7 @@ func (hm *HTTPManager) SetActiveHost() {
 	
 	// Try to find working host
 	for _, host := range hm.hosts {
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		_, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		req := httplib.Get(host + "/health")
 		req.SetTimeout(5*time.Second, 5*time.Second)
 		

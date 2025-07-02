@@ -6,12 +6,10 @@ import (
 	"github.com/astaxie/beego/httplib"
 	"github.com/kingparks/cursor-vip/auth/sign"
 	"github.com/kingparks/cursor-vip/tui/params"
-	"github.com/kingparks/cursor-vip/tui/tool"
 	"github.com/tidwall/gjson"
 	"net/http"
 	"net/url"
 	"os"
-	"os/user"
 	"runtime"
 	"time"
 )
