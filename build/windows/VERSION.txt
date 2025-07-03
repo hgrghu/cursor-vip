@@ -1,0 +1,32 @@
+Cursor VIP 开源免费版
+====================
+
+版本：v2.5.8
+类型：开源版
+状态：删除支付功能，永久免费
+构建日期：2024年12月
+
+主要更新：
+- ✅ 完全删除支付相关功能
+- ✅ 所有VIP功能完全免费
+- ✅ 永久有效，无过期时间
+- ✅ 增强错误处理和日志
+- ✅ 优化用户体验
+
+文件信息：
+- cursor-vip.exe (7.3MB) - Windows 64位版本
+- cursor-vip-x86.exe (7.0MB) - Windows 32位版本
+- 包含Windows图标和清单文件
+- 优化编译，减小文件体积
+
+支持的操作系统：
+- Windows 7/8/10/11 (32位/64位)
+
+支持的Cursor版本：
+- Cursor 0.42.x
+- Cursor 0.43.x  
+- Cursor 0.44.x
+- Cursor 0.45.x
+
+项目地址：
+https://github.com/kingparks/cursor-vip
